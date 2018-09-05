@@ -80,7 +80,7 @@ class Electron(BaseModel):
 
     source_web = models.CharField(max_length=366, verbose_name='来源站点')  # 如果是用户创建的话，站点是用户名
 
-    price = max_money = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='平台价格')
+    platform_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='平台价格')
     specifc = models.CharField(max_length=388, verbose_name="特性", null=True, blank=True)
     # 对应元器件参数表 存储ID
     "电压，电容，电阻"
@@ -121,7 +121,7 @@ class Electron(BaseModel):
 # PinToPin元器件(完全可替换)
 class PinToPin(BaseModel):
     """相同元器件型号 （关系联结）pin to pin"""
-
+    # electron = models.ForeignKey(Electron, related_name='pin_electron', on_delete=models.CASCADE, verbose_name='元器件')
     pin_to_pin = models.ForeignKey(Electron, related_name='pin_to_pin_electron', on_delete=models.CASCADE, verbose_name='PintoPin元器件')
 
 
@@ -129,13 +129,13 @@ class PinToPin(BaseModel):
         db_table = 'm_pintopin'
         verbose_name = u"PinToPin"
         verbose_name_plural = u'PinToPin'
-        unique_together = ('electron', 'pin_to_pin')
+        # unique_together = ('electron', 'pin_to_pin')
 
 
 # 可替换元器件（部分相似）
 class SimilarElectron(BaseModel):
     """相同元器件型号 （关系联结）pin to pin"""
-
+    # electron = models.ForeignKey(Electron, related_name='electrons', on_delete=models.CASCADE, verbose_name='元器件')
     similar = models.ForeignKey(Electron, related_name='similar_electrons', on_delete=models.CASCADE, verbose_name='可替换元器件')
 
 
@@ -143,7 +143,7 @@ class SimilarElectron(BaseModel):
         db_table = 'm_electron_similar'
         verbose_name = u'可替换元器件'
         verbose_name_plural = u'可替换元器件'
-        unique_together = ('electron', 'similar')
+        # unique_together = ('electron', 'similar')
 
 
 
