@@ -115,7 +115,7 @@ class SchemeConsumer(models.Model):
 class SchemeElectron(models.Model):
     """方案元器件应用 bill of meterial (物料清单) Bom清单"""
     scheme = models.ForeignKey(Scheme, on_delete=models.CASCADE, related_name='electrons')
-    model_name = models.CharField(max_length=166, verbose_name='型号')  # 与元器件表对应
+    model_name = models.ForeignKey(Electron, on_delete=models.CASCADE,related_name='sheme_electrons')  # 与元器件表对应
     model_des = models.CharField(max_length=266, verbose_name='描述', null=True, blank=True)
     is_key = models.BooleanField(default=False)   # 是否是关键的元器件部件
     is_record = models.BooleanField(default=False)  # 数据库中是否有该元器件

@@ -1,8 +1,8 @@
 from rest_framework import (viewsets, status, generics, filters, mixins)
 from rest_framework.response import Response
-from .serializers import *
+from apps.product.serializers import *
 from rest_framework.decorators import action
-from .pagination import ProductPagination
+from apps.product.pagination import ProductPagination
 from apps.electron.models import Electron
 
 # -------用户界面------

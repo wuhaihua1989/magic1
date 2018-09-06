@@ -161,22 +161,23 @@ class PasswordView(UpdateAPIView):
 # --------------后台管理界面逻辑代码--------------
 
 
-class UserViewSet(GenericAPIView):
+class UserViewSet(ObtainJSONWebToken):
     """用户模块接口"""
-    serializer_class = UserLoginSerializer
-    queryset = User.objects.all()
-    authentication_classes = (JSONWebTokenAuthentication, authentication.SessionAuthentication)
+
+    # authentication_classes = (JSONWebTokenAuthentication, authentication.SessionAuthentication)
 # 后台用户登录
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         """后台用户登录"""
-        serializer = UserLoginSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         print(request.data)
         # self.get_object()
         if serializer.is_valid():
 
             user = serializer.object.get('user') or request.user
+            print(user)
             token = serializer.object.get('token')
+            print(token)
             # 返回前台登陆数据
             response_data = jwt_response_payload_handler(token, user, request)
             response_data['user'] = UserSerializer(user).data
@@ -201,6 +202,11 @@ class UserViewSet(GenericAPIView):
             response = Response(response_data)
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
 # 用户组（角色）
 class GroupViewSet(viewsets.ModelViewSet):
     """
@@ -382,11 +388,11 @@ class MenuViewSet(generics.ListCreateAPIView, viewsets.GenericViewSet):
         return Menu.objects.filter(parent=None)
 
 
-class IndexViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+class IndexViewSet(APIView):
+    # permission_classes = [IsAuthenticated]
 
-    def list(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         """首页接口"""
-
         try:
             user = User.objects.get(username=request.user.username)
             print(user)

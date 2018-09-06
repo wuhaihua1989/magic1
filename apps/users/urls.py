@@ -11,7 +11,7 @@ router = routers.DefaultRouter()
 router.register(PREFIX_BACK + 'groups', GroupViewSet)
 router.register(PREFIX_BACK + 'permissions', PermissionViewSet)
 router.register(PREFIX_BACK + 'menus', MenuViewSet)
-index = IndexViewSet.as_view({'get': 'list'})
+# index = IndexViewSet.as_view({'get': 'list'})
 user_back_login = UserViewSet.as_view()
 urlpatterns = [
     url(r'', include(router.urls)),
@@ -24,6 +24,6 @@ urlpatterns = [
     url(r"^ic/users/(?P<pk>\d+)/password/$", views.PasswordView.as_view()),
     url(r"^ic/user/detail$", views.UserDetailView.as_view()),
     url(r'^' + PREFIX_BACK + 'backenduser/login/', user_back_login , name='后台用户登陆'),
-    url(r'^' + PREFIX_BACK + 'index/', index, name='后台用户首页'),
+    url(r'^' + PREFIX_BACK + 'index/', views.IndexViewSet.as_view(), name='后台用户首页'),
 
 ]

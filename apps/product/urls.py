@@ -2,11 +2,11 @@ from rest_framework import routers
 from django.conf.urls import (url, include)
 from .views import *
 from magic.settings import PREFIX, PREFIX_BACK
-
+from .views import viewsback
 router = routers.DefaultRouter()
-router.register(PREFIX_BACK + 'products/categories', ProductCategoryViewSet)
-router.register(PREFIX_BACK + 'products/product', ProductViewSet)
-router.register(PREFIX_BACK + 'products/customs', CustomProductViewSet)
+router.register(PREFIX_BACK + 'products/categories',viewsback.ProductCategoryViewSet)
+router.register(PREFIX_BACK + 'products/product', viewsback.ProductViewSet)
+router.register(PREFIX_BACK + 'products/customs', viewsback.CustomProductViewSet)
 # router.register('product_videos', ProductVideoViewSet)
 # router.register('product_electrons', ProductElectronViewSet)
 # router.register('product_customs', CustomProductViewSet)

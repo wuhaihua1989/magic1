@@ -78,7 +78,7 @@ class SchemeCategoryViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, mi
 
 
 # 方案
-class SchemeViewSet(viewsets.GenericViewSet, generics.DestroyAPIView, generics.RetrieveUpdateAPIView, generics.ListAPIView):
+class SchemeViewSet(mixins.CreateModelMixin,viewsets.GenericViewSet, generics.DestroyAPIView, generics.RetrieveUpdateAPIView, generics.ListAPIView):
     """
         delete:
             方案删除
@@ -171,6 +171,8 @@ class SchemeViewSet(viewsets.GenericViewSet, generics.DestroyAPIView, generics.R
         except Exception as e:
             print(e)
             return Response({}, status=status.HTTP_200_OK)
+
+
 
 # # 方案DataSheet文件上传
 # class ElectronDataSheetViewSet(generics.UpdateAPIView, generics.DestroyAPIView, viewsets.GenericViewSet):
