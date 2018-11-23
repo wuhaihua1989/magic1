@@ -6,7 +6,6 @@ from utils.Basemodels import BaseModel
 from django.contrib.auth.models import AbstractUser
 from itsdangerous import TimedJSONWebSignatureSerializer as TJWSerializer
 from itsdangerous import BadData
-# Create your models here.
 
 
 class User(AbstractUser):
@@ -15,7 +14,9 @@ class User(AbstractUser):
      """
     gender_choices = ((u'1', u'男'), (u'0', u'女'))
     mobile = models.CharField(max_length=11, verbose_name="手机号码")
-    default_address = models.ForeignKey('Address', related_name='users', null=True, blank=True,on_delete=models.SET_NULL, verbose_name='默认地址')
+    last_ip = models.CharField(max_length=88, verbose_name="上次登录IP", null=True, blank=True, help_text='上次登录IP')
+    default_address = models.ForeignKey('Address', related_name='users', null=True, blank=True,
+                                        on_delete=models.SET_NULL, verbose_name='默认地址')
     icon = models.TextField(verbose_name='头像', null=True, blank=True)
     rel_name = models.CharField(max_length=188, verbose_name='真实姓名', help_text='真实姓名', null=True, blank=True)
 
@@ -25,22 +26,30 @@ class User(AbstractUser):
     gender = models.CharField(max_length=2, choices=gender_choices, verbose_name='性别', help_text='性别', null=True,
                               blank=True)
 
-    profession = models.ForeignKey('Professions', on_delete=models.CASCADE, verbose_name='职业',related_name='pro_p', help_text='职业', null=True,blank=True)
-    name = models.CharField(max_length=88)
-    industry = models.ForeignKey('Industry', on_delete=models.CASCADE, verbose_name='行业',related_name='ins_i', help_text='行业', null=True, blank=True)
+    profession = models.ForeignKey('Professions', on_delete=models.CASCADE, verbose_name='职业', related_name='pro_p',
+                                   help_text='职业', null=True, blank=True)
+    industry = models.ForeignKey('Industry', on_delete=models.CASCADE, verbose_name='行业', related_name='ins_i',
+                                 help_text='行业', null=True, blank=True)
     # 企业还是个人用户，预留辨别字段
+    name = models.CharField(max_length=88, verbose_name='个人发票抬头', null=True, blank=True)
     company_name = models.CharField(max_length=188, verbose_name='公司名称', help_text='公司名称', null=True, blank=True)
     company_tel_number = models.CharField(max_length=188, verbose_name='电话号码', help_text='电话号码', null=True, blank=True)
     company_fax_number = models.CharField(max_length=188, verbose_name='传真', help_text='传真', null=True, blank=True)
-    company_tax_number = models.CharField(max_length=188, verbose_name='纳税识别号', help_text='纳税识别号', null=True,blank=True)
-
     company_address = models.CharField(max_length=188, verbose_name='公司地址', help_text='地址', null=True, blank=True)
+
+    # 发票信息
+    company_tax_number = models.CharField(max_length=188, verbose_name='纳税识别号', help_text='纳税识别号', null=True,
+                                          blank=True)
+    bank_name = models.CharField(max_length=88, verbose_name='开户银行', help_text='开户银行', null=True, blank=True)
+    bank_account = models.CharField(max_length=188, verbose_name='开户银行账号', help_text='开户银行账号', null=True, blank=True)
+    signer_name = models.CharField(max_length=188, verbose_name='收票人', help_text='收票人', null=True, blank=True)
+    signer_mobile = models.CharField(max_length=11, verbose_name='收票人联系电话', help_text='收票人联系电话', null=True, blank=True)
+    send_address = models.CharField(max_length=188, verbose_name='发票寄送地址', help_text='发票寄送地址', null=True, blank=True)
 
     class Meta:
         db_table = "m_users"
         verbose_name = "用户信息"
         verbose_name_plural = verbose_name
-
 
     def generate_sms_code_token(self):
         """生成发送短信的临时票据[access_token]"""
@@ -69,42 +78,57 @@ class User(AbstractUser):
         token = token.decode()
         return token
 
-
+    @staticmethod
+    def check_set_password_token(token, user_id):
+        """
+        检验设置密码的token
+        """
+        serializer = TJWSerializer(settings.SECRET_KEY, expires_in=SMS_CODE_TOKEN_EXPIRES)
+        try:
+            data = serializer.loads(token)
+        except BadData:
+            return False
+        else:
+            if user_id != str(data.get('user')):
+                return False
+            else:
+                return True
 
 
 # 职业
 class Professions(BaseModel):
     """职业"""
     name = models.CharField(max_length=88)
-    # parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name='pro', null=True, blank=True,verbose_name='职业类')
-
 
     class Meta:
         db_table = 'm_profession'
         verbose_name = u"职业"
         verbose_name_plural = u'职业'
 
+    def __str__(self):
+        return self.name
+
 
 class Industry(BaseModel):
     """"""
     name = models.CharField(max_length=88)
-    # parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name='ins', null=True, blank=True,verbose_name='行业类')
 
     class Meta:
         db_table = 'm_Industry'
         verbose_name = u"行业"
         verbose_name_plural = u'行业'
 
+    def __str__(self):
+        return self.name
+
 
 # 收货地址
 class Address(BaseModel):
     """收货地址 """
     consumer = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='关联消费者')
-    province = models.ForeignKey('Area', on_delete=models.PROTECT, related_name='province_addresses', verbose_name='省')
-
-    city = models.ForeignKey('Area'
-                             , on_delete=models.PROTECT, related_name='city_addresses', verbose_name='市')
-    district = models.ForeignKey('Area', on_delete=models.PROTECT, related_name='district_addresses',verbose_name='区')
+    province = models.CharField(max_length=188, default="", verbose_name="省份")
+    city = models.CharField(max_length=188, default="", verbose_name="城市")
+    district = models.CharField(max_length=188, default="", verbose_name="区域")
 
     address = models.CharField(max_length=188, verbose_name='详细地址')
     signer_name = models.CharField(max_length=188, verbose_name='签收人')
@@ -117,22 +141,8 @@ class Address(BaseModel):
         verbose_name = u'收货地址'
         verbose_name_plural = u'收货地址'
 
-
-class Area(models.Model):
-    """
-    行政区划
-    """
-    name = models.CharField(max_length=20, verbose_name='名称')
-    parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name='subs', null=True, blank=True,verbose_name='上级行政区划')
-
-
-    class Meta:
-        db_table = 'm_areas'
-        verbose_name = '行政区划'
-        verbose_name_plural = '行政区划'
-
     def __str__(self):
-        return self.name
+        return self.consumer.username
 
 
 # 自定义权限类

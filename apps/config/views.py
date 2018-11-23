@@ -1,13 +1,14 @@
 from django.http import JsonResponse
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import (generics, status, authentication, permissions, filters, viewsets, routers, mixins)
 
 from rest_framework.viewsets import GenericViewSet
 import json
 from apps.electron.models import Electron
-from apps.electron.serializers import ElectronSerializer
+from apps.electron.serializer.serializers_back import ElectronSerializer
 from .serializers import *
 from apps.config.models import FreightCarrier, MagicContent, MagicContentCategory
 
@@ -18,12 +19,11 @@ class FreightViewSet(mixins.ListModelMixin,mixins.RetrieveModelMixin,mixins.Upda
     queryset = FreightCarrier.objects.all()
 
     def list (self, request, *args, **kwargs):
-        print(request.data)
-        queryset = self.queryset
+        queryset = self.queryset.order_by('-update_at')
         serializer = self.get_serializer(queryset, many=True)
         if not serializer.data:
             return Response({"message": "无数据"})
-        return Response(serializer.data[::-1][0])
+        return Response(serializer.data[0])
 
 
 # 管理添加内容分类
@@ -52,6 +52,7 @@ class ContentCategoryViewSet(viewsets.ModelViewSet):
 class WebSetViewSet(viewsets.ModelViewSet):
     queryset = WebSite.objects.all()
     serializer_class = WebSiteSerializer
+    permission_classes = [IsAuthenticated]
     #    # def create(self, request, *args, **kwargs):
     #     try:
     #         data = request.data
@@ -66,6 +67,7 @@ class WebSetViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.queryset.order_by('-update_at')
         serializer = self.get_serializer(queryset, many=True)
+        print(serializer.data)
         if not serializer.data:
             return Response({"message": "无数据"})
         return Response(serializer.data[0])
@@ -115,7 +117,7 @@ class ProtocolViewSet(viewsets.ModelViewSet):
 
 
     def list(self, request, *args, **kwargs):
-        queryset = self.queryset.order_by('-update_at')
+        queryset = self.queryset.order_by('create_at')
         serializer = self.get_serializer(queryset, many=True)
         if not serializer.data:
             return Response({"message":"无数据"})
@@ -136,20 +138,23 @@ class HotModelViewSet(mixins.CreateModelMixin,mixins.RetrieveModelMixin,mixins.D
         #     return
         return HotModelSerialier
 
-    @action(['get'], detail=True)
+    @action(['get'], detail=False)
     def hsearch(self, request, *args, **kwargs):
         try:
             model_name = request.query_params['model_name']
             electrons = Electron.objects.filter(model_name__istartswith=model_name)
-
+            if electrons is None:
+                return Response({'message':'未找到'},status=status.HTTP_200_OK)
             serializer = self.get_serializer(electrons, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
-            raise e
+
             return Response({'message': '查询失败'}, status=status.HTTP_404_NOT_FOUND)
 
     def list(self, request, *args, **kwargs):
         # hot_name = HotModel.objects.filter(is_delete=False)
+
+
         hot_name = Electron.objects.filter(is_hot=True)
         serializer = HotModelSerialier(hot_name, many=True)
         return Response(serializer.data)
@@ -164,22 +169,37 @@ class HotModelViewSet(mixins.CreateModelMixin,mixins.RetrieveModelMixin,mixins.D
 # 内容列表
 class MagicContentViewSet(viewsets.ModelViewSet):
     queryset = MagicContent.objects.all()
-
+    serializer_class = MagicContentListSerializer
     def get_serializer_class(self):
-        if self.action == 'list':
-            return MagicContentListSerializer
+        if self.action in ['list','retrieve','update']:
+            return MagicContentSerializer
         # elif self.action == 'retrieve' or self.action == 'update':
-        return MagicContentSerializer
-        # # else:
-        #     return MagicContentCategory
+        return MagicContentListSerializer
 
 
 
 
-class ImageStorageViewSet(viewsets.ModelViewSet):
+
+class ImageStorageViewSet(mixins.CreateModelMixin,viewsets.GenericViewSet):
     """图片上传接口"""
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class VideoStorageViewSet(mixins.CreateModelMixin,viewsets.GenericViewSet):
+
+    queryset = Video.objects.all()
+    serializer_class = VedioSerializer
+
+
+class FileStorageViewSet(mixins.CreateModelMixin,viewsets.GenericViewSet):
+
+    queryset = Files.objects.all()
+    serializer_class = FilesSerializer
+
+
+
 
 
 

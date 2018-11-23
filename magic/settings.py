@@ -96,7 +96,7 @@ WSGI_APPLICATION = 'magic.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'magic3',        #数据库名字
+        'NAME': 'magic1',        #数据库名字
         'USER': 'root',          #账号
         'PASSWORD': 'mysql',    #密码
         # 'HOST': '47.93.198.159',     #IP
@@ -285,6 +285,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
 }
 
 
@@ -292,6 +295,7 @@ REST_FRAMEWORK = {
 JWT_AUTH = {
     # jwt生成token的有效期,一天
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+    'JWT_AUTH_HEADER_PREFIX': 'Magic',
     # 设置jwt返回的数据
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'apps.users.utils.jwt_response_payload_handler',
 }
@@ -317,3 +321,6 @@ import raven
 PREFIX = 'ic/'
 PREFIX_BACK = 'ic/magic/'
 
+
+# APPID
+# API_KEY

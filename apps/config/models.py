@@ -111,6 +111,26 @@ class Image(BaseModel):
         verbose_name = u'图集'
         verbose_name_plural = verbose_name
 
+class Video(models.Model):
+    videos = models.FileField(upload_to="videos", verbose_name='video_set', null=True, blank=True)
+
+    class Meta:
+        db_table = 'm_db_videos'
+        verbose_name = u'视频集'
+        verbose_name_plural = verbose_name
+
+
+class Files(models.Model):
+    files = models.FileField(upload_to="files", verbose_name='files_set',null=True, blank=True)
+
+
+    class Meta:
+        db_table = 'm_db_files'
+        verbose_name = u'文件集'
+        verbose_name_plural = verbose_name
+
+
+
 
 
 

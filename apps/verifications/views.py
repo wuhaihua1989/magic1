@@ -11,8 +11,8 @@ from . import serializers
 from libs.yuntongxun.sms import CCP
 from libs.captcha.captcha import captcha
 from apps.users.models import User
-
-
+from rest_framework import status, mixins, viewsets
+from .serializers import SmsSerializer
 
 class SMSCodeView(APIView):
     """短信验证码"""
@@ -50,7 +50,7 @@ class SMSCodeView(APIView):
         except Exception as e:
             print(e)
         # 调用celery异步发送短信
-        # send_sms_code.delay(mobile,sms_code)5
+        # send_sms_code.delay(mobile,sms_code)
         return Response({"message": "短信已发送"}, status.HTTP_200_OK)
 
 
@@ -67,6 +67,7 @@ class SMSCodeByTokenView(GenericAPIView):
 
         # 从序列化器对象中提取手机号
         mobile = serializer.mobile
+        print(mobile)
 
         # 保存短信验证码与发送记录
         redis_conn = get_redis_connection('verify_codes')
@@ -78,7 +79,53 @@ class SMSCodeByTokenView(GenericAPIView):
         pl.setex("send_flag_%s" % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
         pl.execute() # 把上面组装的操作一并执行
         # 用celery异步发送短信，异步任务函数中的参数，必须一一按照顺序填写到delay中
-        # send_sms_code.delay(mobile,sms_code)
+        # send_sms_code.delay(mobile,sms_code
+        ccp = CCP()
+        time = str(constants.SMS_CODE_REDIS_EXPIRES / 60)
+        try:
+            ccp.send_template_sms(mobile, [sms_code, time], constants.SMS_TEMP_ID)
+        except Exception as e:
+            print(e)
 
 
         return Response({"message": "OK"}, status.HTTP_200_OK)
+
+
+class SmsCodeViewset(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """
+    发送短信验证码
+    """
+    serializer_class = SmsSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        mobile = serializer.validated_data["mobile"]
+        redis_conn = get_redis_connection('verify_codes')
+
+        send_flag = redis_conn.get("send_flag_%s" % mobile)
+
+        if send_flag:
+            return Response({"message": "请求频繁"})
+
+        # 生成短信验证码
+        sms_code = "%06d" % random.randint(0, 999999)
+        # 保存短信验证码与发送记录
+        print(sms_code)
+        pl = redis_conn.pipeline()
+        pl.multi()
+        pl.setex("sms_%s" % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
+        # 发送短信的标志，维护60秒
+        pl.setex("send_flag_%s" % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+        pl.execute()
+        # 发送短信
+        ccp = CCP()
+        time = str(constants.SMS_CODE_REDIS_EXPIRES / 60)
+        try:
+            ccp.send_template_sms(mobile, [sms_code, time], constants.SMS_TEMP_ID)
+        except Exception as e:
+            print(e)
+            return Response({"error": e})
+
+        return Response({"message": "短信已发送"}, status=status.HTTP_201_CREATED)

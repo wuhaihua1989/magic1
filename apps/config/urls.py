@@ -14,13 +14,12 @@ router.register(PREFIX_BACK +'config/protocol', ProtocolViewSet)
 router.register(PREFIX_BACK +r'config/magic_content', MagicContentViewSet)
 router.register(PREFIX_BACK +r'config/hot_model', HotModelViewSet)
 router.register(r'ic/image_url', ImageStorageViewSet)
+router.register(r'ic/video_url', VideoStorageViewSet)
+router.register(r'ic/file_url', FileStorageViewSet)
 
 
 
 urlpatterns = [
     # url(r'^freights/list/$', freight_list, name='freight-list'),
-    # url(r'^freights/create/$', freight_create, name='freight-create'),
     url(r'', include(router.urls)),
-
-
 ]

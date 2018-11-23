@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 
 class SupplierPagination(PageNumberPagination):
-    page_size = 1
+    page_size = 3
     page_size_query_param = 'page_size'
     max_page_size = 10000
 
@@ -21,7 +21,7 @@ class SupplierPagination(PageNumberPagination):
 
 
 class ElectronPagination(PageNumberPagination):
-    page_size = 1
+    page_size = 3
     page_size_query_param = 'page_size'
     max_page_size = 10000
 
@@ -39,7 +39,7 @@ class ElectronPagination(PageNumberPagination):
 
 
 class KwargsPagination(PageNumberPagination):
-    page_size = 1
+    page_size = 3
     page_size_query_param = 'page_size'
     max_page_size = 10000
 
@@ -52,5 +52,19 @@ class KwargsPagination(PageNumberPagination):
                 'previous': self.get_previous_link(),
                 'page': self.page.number
             },
+            'results': data
+        })
+
+
+class Pagination(PageNumberPagination):
+    page_size = 1
+    page_size_query_param = 'size'
+    page_query_param = "page"
+    max_page_size = 1000
+
+    # 自定义
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,
             'results': data
         })

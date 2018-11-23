@@ -30,15 +30,17 @@ class SchemeCategory(models.Model):
 class Scheme(models.Model):
     """应用方案"""
     title = models.CharField(max_length=188, verbose_name='方案名称')
+    scheme_user = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="下单用户", related_name='scheme_user')
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='价格')
     category = models.ForeignKey(SchemeCategory, on_delete=models.CASCADE, verbose_name='方案类型')
     tags = models.CharField(max_length=566,verbose_name='标签', null=True, blank=True)  # ; 根据方案名称分词截
 
     images = models.CharField(max_length=566, verbose_name='图片', null=True, blank=True)
 
-    source_code = models.CharField(max_length=566,verbose_name='头像', null=True, blank=True)
+    source_code = models.CharField(max_length=566,verbose_name='源码', null=True, blank=True)
     code_name = models.CharField(max_length=188, verbose_name='源码名称', null=True, blank=True)
-    desc_specific = models.TextField(verbose_name='特性描述', blank=True)
+    desc_specific = models.TextField(verbose_name='特性', null=True,blank=True)
+    describe = models.TextField(verbose_name='描述', null=True,blank=True)
     is_reference = models.BooleanField(default=False, verbose_name='参考设计')  # 根据字段判断是否需要收费
     views = models.IntegerField(default=0, verbose_name='浏览量', null=True, blank=True)
     source_web = models.CharField(max_length=366, verbose_name='来源站点', null=True, blank=True)  # 如果是用户创建的话，站点是用户名
@@ -70,7 +72,7 @@ class Scheme(models.Model):
 
 # 相似方案
 class SimilarScheme(models.Model):
-
+    scheme= models.ForeignKey(Scheme, related_name='similars', on_delete=models.CASCADE, verbose_name='元器件')
     similar = models.ForeignKey(Scheme, related_name='similar_schemes', on_delete=models.CASCADE, verbose_name='可替换方案')
     create_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
 
@@ -127,13 +129,13 @@ class SchemeElectron(models.Model):
         verbose_name_plural = u'方案元器件'
 
     def __str__(self):
-        return self.model_name + '-' + self.scheme.title
+        return self.model_name
 
 
 # 方案的技术文档
 class SchemeDocuments(models.Model):
     """方案技术文档"""
-    scheme = models.ForeignKey(Scheme, on_delete=models.CASCADE)
+    scheme = models.ForeignKey(Scheme, on_delete=models.CASCADE,related_name='documents')
     name = models.CharField(max_length=188, null=True, blank=True, verbose_name='文档名称', help_text='文档名称')
     url = models.CharField(max_length=288, verbose_name='文件路径', null=True, blank=True)
 
@@ -141,6 +143,9 @@ class SchemeDocuments(models.Model):
         db_table = 'm_scheme_documents'
         verbose_name = u'方案技术文档'
         verbose_name_plural = u'方案技术文档'
+
+    def __str__(self):
+        return self.name
 
 
 # 方案视频
